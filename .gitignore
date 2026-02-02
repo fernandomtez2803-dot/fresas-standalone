@@ -16,11 +16,6 @@ data/*.xlsx
 data/*.csv
 data/*.db
 
-# Environment
-.env
-.env.local
-*.log
-
 # IDE
 .vscode/
 .idea/
@@ -29,3 +24,6 @@ data/*.db
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log

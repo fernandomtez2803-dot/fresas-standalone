@@ -4,18 +4,22 @@ from pathlib import Path
 from typing import Optional
 import os
 
+# Get the base directory (backend folder)
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR.parent / "data"
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
     
-    # Excel file path (source of truth)
-    EXCEL_PATH: str = "/app/data/Control FRESAS.xls"
+    # Excel file path (source of truth) - default to relative path
+    EXCEL_PATH: str = str(DATA_DIR / "Control FRESAS.xls")
     
     # Pending writes log (fallback when Excel locked)
-    PENDING_LOG_PATH: str = "/app/data/pending_consumos.csv"
+    PENDING_LOG_PATH: str = str(DATA_DIR / "pending_consumos.csv")
     
     # SQLite cache (optional, for fast queries)
-    CACHE_DB_PATH: str = "/app/data/cache.db"
+    CACHE_DB_PATH: str = str(DATA_DIR / "fresas_cache.db")
     
     # API settings
     API_HOST: str = "0.0.0.0"
