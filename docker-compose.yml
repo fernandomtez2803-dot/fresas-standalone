@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: fresas-backend
+    volumes:
+      # Monta la carpeta de datos - CAMBIAR A LA RUTA DEL SERVIDOR
+      - ./data:/data
+    environment:
+      - EXCEL_PATH=/data/Control FRESAS.xls
+      - PENDING_LOG_PATH=/data/pending_consumos.csv
+      - CACHE_DB_PATH=/data/fresas_cache.db
+    restart: unless-stopped
+    networks:
+      - fresas-net
+
+  frontend:
+    build: ./frontend
+    container_name: fresas-frontend
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - fresas-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: fresas-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - fresas-net
+
+networks:
+  fresas-net:
+    driver: bridge
