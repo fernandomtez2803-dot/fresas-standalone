@@ -221,6 +221,15 @@ class ExcelDataProvider:
         catalog = self._load_catalog()
         return list(catalog.values())
     
+    def get_marcas(self) -> List[str]:
+        """Get unique list of marcas/proveedores from catalog."""
+        catalog = self._load_catalog()
+        marcas = set()
+        for fresa in catalog.values():
+            if fresa.marca:
+                marcas.add(fresa.marca.strip().upper())
+        return sorted(list(marcas))
+    
     def get_fresa_count(self) -> int:
         """Get count of fresas in catalog."""
         catalog = self._load_catalog()
@@ -456,7 +465,7 @@ class ExcelDataProvider:
             # Write data to columns matching Excel structure:
             # 0: FECHA, 1: OP, 2: UDS, 3: CÓDIGO ESCANEADO, 4: REFERENCIA FRESA,
             # 5: PROVEEDOR MARCA, 6: TIPO DE FRESA, 7: PRECIO, 8: FICHA (proyecto)
-            ws.write(next_row, 0, consumo.fecha.strftime('%Y-%m-%d %H:%M'))  # FECHA
+            ws.write(next_row, 0, consumo.fecha.strftime('%d/%m/%Y'))  # FECHA (sin hora)
             ws.write(next_row, 1, consumo.operario)  # OP (operario)
             ws.write(next_row, 2, consumo.cantidad)  # UDS (unidades)
             ws.write(next_row, 3, consumo.barcode)  # CÓDIGO ESCANEADO
@@ -465,6 +474,9 @@ class ExcelDataProvider:
             ws.write(next_row, 6, consumo.tipo or '')  # TIPO DE FRESA
             if consumo.precio:
                 ws.write(next_row, 7, consumo.precio)  # PRECIO
+            else:
+                # Marcar fresas nuevas sin precio
+                ws.write(next_row, 7, 'PRECIO PENDIENTE')  # PRECIO
             if consumo.proyecto:
                 ws.write(next_row, 8, consumo.proyecto)  # FICHA (proyecto)
             

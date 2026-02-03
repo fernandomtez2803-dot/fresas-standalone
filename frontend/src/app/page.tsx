@@ -52,6 +52,7 @@ export default function ScanPage() {
     // New fresa form state
     const [isNewFresaMode, setIsNewFresaMode] = useState(false);
     const [newFresaData, setNewFresaData] = useState<Partial<FresaData>>({});
+    const [marcas, setMarcas] = useState<string[]>([]);
 
     const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +60,7 @@ export default function ScanPage() {
     useEffect(() => {
         barcodeRef.current?.focus();
         checkHealth();
+        loadMarcas();
         // Update date
         const updateDate = () => {
             const now = new Date();
@@ -93,6 +95,15 @@ export default function ScanPage() {
             setHealth(data);
         } catch (e) {
             console.error('Health check failed:', e);
+        }
+    }
+
+    async function loadMarcas() {
+        try {
+            const data = await apiGet('/marcas');
+            setMarcas(data.marcas || []);
+        } catch (e) {
+            console.error('Failed to load marcas:', e);
         }
     }
 
@@ -316,16 +327,19 @@ export default function ScanPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">
-                                        Marca <span className="text-red-400">*</span>
+                                        Marca / Proveedor <span className="text-red-400">*</span>
                                     </label>
-                                    <input
-                                        type="text"
+                                    <select
                                         value={newFresaData.marca || ''}
                                         onChange={(e) => setNewFresaData(prev => ({ ...prev, marca: e.target.value }))}
-                                        placeholder="Ej: MITSUBISHI, SUMITOMO..."
                                         className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
                                         autoFocus
-                                    />
+                                    >
+                                        <option value="">Selecciona marca...</option>
+                                        {marcas.map(marca => (
+                                            <option key={marca} value={marca}>{marca}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div>

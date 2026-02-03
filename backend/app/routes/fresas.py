@@ -80,6 +80,14 @@ async def lookup_barcode(barcode: str = Query(..., description="Barcode to looku
     )
 
 
+@router.get("/marcas")
+async def get_marcas():
+    """Get list of unique marcas/proveedores from catalog."""
+    provider = get_data_provider()
+    marcas = provider.get_marcas()
+    return {"marcas": marcas}
+
+
 # =============================================================================
 # REGISTER CONSUMO
 # =============================================================================
