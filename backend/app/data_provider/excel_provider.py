@@ -323,27 +323,48 @@ class ExcelDataProvider:
         barcode: str,
         cantidad: int,
         operario: str,
-        proyecto: Optional[str] = None
+        proyecto: Optional[str] = None,
+        marca: Optional[str] = None,
+        tipo: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Register a consumo. Tries to write to Excel first.
         Falls back to pending log if Excel is locked.
+        If fresa not found but marca/tipo provided, registers as NEW.
         """
         fresa = self.lookup_barcode(barcode)
-        if not fresa:
-            return {"success": False, "error": "Barcode not found"}
         
-        consumo = ConsumoData(
-            fecha=datetime.now(),
-            barcode=barcode.upper(),
-            cantidad=cantidad,
-            operario=operario,
-            proyecto=proyecto,
-            referencia=fresa.referencia,
-            marca=fresa.marca,
-            tipo=fresa.tipo,
-            precio=fresa.precio
-        )
+        # If not found in catalog
+        if not fresa:
+            # Check if marca/tipo provided for new fresa
+            if not marca:
+                return {"success": False, "error": "Barcode not found", "not_found": True}
+            
+            # Create consumo for NEW fresa
+            consumo = ConsumoData(
+                fecha=datetime.now(),
+                barcode=self._normalize_barcode(barcode),
+                cantidad=cantidad,
+                operario=operario,
+                proyecto=proyecto,
+                referencia="NUEVA",  # Mark as new
+                marca=marca,
+                tipo=tipo or "PENDIENTE",
+                precio=None
+            )
+        else:
+            # Use catalog data
+            consumo = ConsumoData(
+                fecha=datetime.now(),
+                barcode=barcode.upper(),
+                cantidad=cantidad,
+                operario=operario,
+                proyecto=proyecto,
+                referencia=fresa.referencia,
+                marca=fresa.marca,
+                tipo=fresa.tipo,
+                precio=fresa.precio
+            )
         
         # Try to write to Excel with lock
         with _write_lock:

@@ -123,8 +123,13 @@ export default function ScanPage() {
     }
 
     async function saveNewFresa() {
-        if (!newFresaData.barcode) {
-            setError('Código de barras requerido');
+        if (!newFresaData.barcode || !newFresaData.marca) {
+            setError('Código y marca son requeridos');
+            return;
+        }
+
+        if (!operario.trim()) {
+            setError('Ingresa tu nombre de operario');
             return;
         }
 
@@ -132,22 +137,24 @@ export default function ScanPage() {
         setError(null);
 
         try {
-            const result = await apiPost('/fresa', {
+            // Register consumo with new fresa data
+            const result = await apiPost('/consumo', {
                 barcode: newFresaData.barcode,
-                referencia: newFresaData.referencia || null,
-                marca: newFresaData.marca || null,
-                tipo: newFresaData.tipo || null,
-                precio: newFresaData.precio || null
+                cantidad,
+                operario: operario.trim(),
+                proyecto: proyecto.trim() || null,
+                marca: newFresaData.marca,
+                tipo: newFresaData.tipo || 'PENDIENTE'
             });
 
             setSuccess({
                 success: true,
-                pending: false,
-                message: 'Fresa añadida al catálogo'
+                pending: result.pending || false,
+                message: 'Consumo registrado - FRESA NUEVA marcada en Excel'
             });
             checkHealth();
         } catch (e: any) {
-            setError(e.message || 'Error al guardar fresa');
+            setError(e.message || 'Error al registrar consumo');
         } finally {
             setLoading(false);
         }
@@ -296,62 +303,80 @@ export default function ScanPage() {
                                     <span className="font-medium">Código no encontrado</span>
                                 </div>
                                 <p className="text-slate-400 text-sm">
-                                    Puedes añadir esta nueva fresa al catálogo completando los datos:
+                                    Registra el consumo indicando la marca. Se marcará como NUEVA en el Excel.
                                 </p>
                             </div>
 
                             {/* New Fresa Data Form */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2 bg-slate-900/50 p-4 rounded-xl">
+                            <div className="space-y-4">
+                                <div className="bg-slate-900/50 p-4 rounded-xl">
                                     <div className="text-xs text-slate-500 uppercase mb-1">Código</div>
                                     <div className="text-lg font-mono text-emerald-400">{newFresaData.barcode}</div>
                                 </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">
-                                        Referencia
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={newFresaData.referencia || ''}
-                                        onChange={(e) => setNewFresaData(prev => ({ ...prev, referencia: e.target.value }))}
-                                        placeholder="Referencia..."
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-400 mb-2">
-                                        Marca
+                                        Marca <span className="text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={newFresaData.marca || ''}
                                         onChange={(e) => setNewFresaData(prev => ({ ...prev, marca: e.target.value }))}
-                                        placeholder="Marca..."
+                                        placeholder="Ej: MITSUBISHI, SUMITOMO..."
                                         className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
+                                        autoFocus
                                     />
                                 </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">
-                                        Tipo
+                                        Tipo (opcional)
                                     </label>
                                     <input
                                         type="text"
                                         value={newFresaData.tipo || ''}
                                         onChange={(e) => setNewFresaData(prev => ({ ...prev, tipo: e.target.value }))}
-                                        placeholder="Tipo..."
+                                        placeholder="Ej: PB0.5X4X4..."
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Operario + Proyecto fields */}
+                            <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                                        Operario
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={operario}
+                                        onChange={(e) => setOperario(e.target.value)}
+                                        placeholder="Tu nombre"
                                         className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">
-                                        Precio (€)
+                                        Nº Proyecto
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={proyecto}
+                                        onChange={(e) => setProyecto(e.target.value)}
+                                        placeholder="Ficha..."
+                                        className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                                        Cantidad
                                     </label>
                                     <input
                                         type="number"
-                                        step="0.01"
-                                        value={newFresaData.precio || ''}
-                                        onChange={(e) => setNewFresaData(prev => ({ ...prev, precio: parseFloat(e.target.value) || undefined }))}
-                                        placeholder="0.00"
+                                        min="1"
+                                        value={cantidad}
+                                        onChange={(e) => setCantidad(parseInt(e.target.value) || 1)}
                                         className="w-full px-4 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:outline-none"
                                     />
                                 </div>
@@ -360,7 +385,7 @@ export default function ScanPage() {
                             {/* Save Button */}
                             <button
                                 onClick={saveNewFresa}
-                                disabled={loading}
+                                disabled={loading || !newFresaData.marca}
                                 className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:bg-slate-700 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-colors"
                             >
                                 {loading ? (
@@ -368,7 +393,7 @@ export default function ScanPage() {
                                 ) : (
                                     <>
                                         <Check className="h-6 w-6" />
-                                        Guardar Nueva Fresa
+                                        Registrar Consumo (NUEVA)
                                     </>
                                 )}
                             </button>

@@ -30,6 +30,9 @@ class ConsumoRequest(BaseModel):
     cantidad: int = 1
     operario: str
     proyecto: Optional[str] = None  # Número de proyecto/ficha
+    # Para fresas nuevas (no catalogadas)
+    marca: Optional[str] = None
+    tipo: Optional[str] = None
 
 
 class ConsumoOut(BaseModel):

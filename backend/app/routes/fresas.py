@@ -89,6 +89,7 @@ async def register_consumo(data: ConsumoRequest):
     """
     Register fresa consumption. 
     Writes to Excel if possible, falls back to pending log if locked.
+    Supports new fresas with marca/tipo provided.
     """
     provider = get_data_provider()
     
@@ -98,10 +99,15 @@ async def register_consumo(data: ConsumoRequest):
         barcode=data.barcode,
         cantidad=data.cantidad,
         operario=data.operario,
-        proyecto=data.proyecto
+        proyecto=data.proyecto,
+        marca=data.marca,
+        tipo=data.tipo
     )
     
     if not result.get("success"):
+        # If not found, return special error for frontend to handle
+        if result.get("not_found"):
+            raise HTTPException(status_code=404, detail=result.get("error", "Barcode not found"))
         raise HTTPException(status_code=400, detail=result.get("error", "Error"))
     
     return ConsumoResponse(
