@@ -11,7 +11,7 @@ import { useState, useRef, useEffect } from 'react';
 import { apiGet, apiPost } from '@/lib/api';
 import {
     Scan, Check, AlertCircle, Package, DollarSign,
-    RefreshCw, Loader2, CheckCircle2, XCircle, Clock
+    RefreshCw, Loader2, CheckCircle2, XCircle, Clock, HelpCircle, ChevronDown
 } from 'lucide-react';
 
 interface FresaData {
@@ -53,6 +53,7 @@ export default function ScanPage() {
     const [isNewFresaMode, setIsNewFresaMode] = useState(false);
     const [newFresaData, setNewFresaData] = useState<Partial<FresaData>>({});
     const [marcas, setMarcas] = useState<string[]>([]);
+    const [showHelp, setShowHelp] = useState(false);
 
     const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -249,6 +250,14 @@ export default function ScanPage() {
 
                     {/* Status indicator */}
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowHelp(!showHelp)}
+                            className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm hover:bg-blue-500/30 transition-colors"
+                            title="Ayuda"
+                        >
+                            <HelpCircle className="h-4 w-4" />
+                            Ayuda
+                        </button>
                         {health?.pending_count ? (
                             <button
                                 onClick={syncPending}
@@ -265,6 +274,75 @@ export default function ScanPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Help Panel */}
+            {showHelp && (
+                <div className="max-w-xl mx-auto mb-6">
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-blue-400 flex items-center gap-2">
+                                <HelpCircle className="h-5 w-5" />
+                                ¿Cómo funciona?
+                            </h2>
+                            <button
+                                onClick={() => setShowHelp(false)}
+                                className="text-slate-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 text-sm text-slate-300">
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-emerald-400 mb-2">📌 Uso Normal</h3>
+                                <ol className="list-decimal list-inside space-y-1 ml-2">
+                                    <li>Escanea o escribe el código de barras</li>
+                                    <li>Haz clic en "Buscar"</li>
+                                    <li>Si la fresa existe, se rellenan todos los datos automáticamente</li>
+                                    <li>Escribe tu nombre en "Operario"</li>
+                                    <li>Opcionalmente añade el número de proyecto</li>
+                                    <li>Haz clic en "Registrar Consumo" ✅</li>
+                                </ol>
+                            </div>
+
+                            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-lg">
+                                <h3 className="font-semibold text-amber-400 mb-2">⚠️ Fresa Nueva (no encontrada)</h3>
+                                <p className="mb-2">Si el código no existe en el catálogo:</p>
+                                <ol className="list-decimal list-inside space-y-1 ml-2">
+                                    <li>Aparecerá un formulario amarillo</li>
+                                    <li>Selecciona la <strong>Marca/Proveedor</strong> del desplegable</li>
+                                    <li>Opcionalmente escribe el Tipo</li>
+                                    <li>Rellena Operario, Proyecto y Cantidad</li>
+                                    <li>Haz clic en "Registrar Consumo (NUEVA)"</li>
+                                    <li>Se guardará en el Excel con <strong>"PRECIO PENDIENTE"</strong></li>
+                                    <li>Luego alguien debe abrir el Excel y poner el precio manualmente</li>
+                                </ol>
+                            </div>
+
+                            <div className="bg-slate-800/50 p-4 rounded-lg">
+                                <h3 className="font-semibold text-blue-400 mb-2">🔄 Excel Bloqueado</h3>
+                                <p className="mb-2">Si alguien tiene el Excel abierto:</p>
+                                <ul className="list-disc list-inside space-y-1 ml-2">
+                                    <li>El consumo se guarda como <strong>"Pendiente"</strong></li>
+                                    <li>Aparecerá un botón amarillo arriba: "X pendientes"</li>
+                                    <li>Cuando cierren el Excel, haz clic en ese botón</li>
+                                    <li>Se sincronizarán todos los consumos pendientes automáticamente</li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-lg">
+                                <h3 className="font-semibold text-emerald-400 mb-2">💡 Consejos</h3>
+                                <ul className="list-disc list-inside space-y-1 ml-2">
+                                    <li>Cierra el Excel cuando no lo uses para evitar bloqueos</li>
+                                    <li>Si ves "X pendientes", sincroniza cuanto antes</li>
+                                    <li>Las fresas nuevas aparecen con "PRECIO PENDIENTE" en el Excel</li>
+                                    <li>La fecha se guarda automáticamente sin hora</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Main Card */}
             <div className="max-w-xl mx-auto">
